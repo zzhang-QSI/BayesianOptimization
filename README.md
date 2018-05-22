@@ -1,3 +1,6 @@
+Forked from https://github.com/fmfn/BayesianOptimization
+I want to add more parallel exploration during the GP fitting, because the cost of get more data points maybe cheap
+
 # Bayesian Optimization
 
 [![Travis](https://img.shields.io/travis/fmfn/BayesianOptimization/master.svg?label=Travis%20CI)](https://travis-ci.org/fmfn/BayesianOptimization)
