@@ -271,18 +271,33 @@ class BayesianOptimization(object):
             # Test if x_max is repeated, if it is, draw another one at random
             # If it is repeated, print a warning
             pwarning = False
-            while x_max in self.space:
-                x_max = self.space.random_points(1)[0]
-                pwarning = True
-
+            if isinstance(x_max,list):
+                for i in range(len(x_max)):
+                    while x_max[i] in self.space:
+                        x_max[i] = self.space.random_points(1)[0]
+                        pwarning = True
+            else:
+                while x_max in self.space:
+                    x_max = self.space.random_points(1)[0]
+                    pwarning = True
             # Append most recently generated values to X and Y arrays
-            y = self.space.observe_point(x_max)
+            if isinstance(x_max,list):
+                y=list(map(self.space.observe_point,x_max))
+            else:
+                y = self.space.observe_point(x_max)
+            
+            ##shrink back to scalar
+            if isinstance(x_max,list):
+                max_id=np.array(y).argmax()
+                if self.verbose:
+                    print("shrink x_max number:",len(y))
+                y=y[max_id]
+                x_max=x_max[max_id]
             if self.verbose:
                 self.plog.print_step(x_max, y, pwarning)
 
             # Updating the GP.
             self.gp.fit(self.space.X, self.space.Y)
-
             # Update the best params seen so far
             self.res['max'] = self.space.max_point()
             self.res['all']['values'].append(y)

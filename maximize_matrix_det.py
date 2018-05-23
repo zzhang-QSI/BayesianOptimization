@@ -31,5 +31,6 @@ for i in range(dim):
 
 gp_params = {"alpha": 1e-5, "n_restarts_optimizer": 2}
 bo = BayesianOptimization(target,param, verbose=0)
+bo._acqkw = {'n_warmup': 100, 'n_iter': 250,'topn':111}
 bo.maximize(init_points=20, n_iter=100, acq="ei", xi=0.1,**gp_params)
 print(bo.res['max'])

@@ -4,9 +4,9 @@ import numpy as np
 from datetime import datetime
 from scipy.stats import norm
 from scipy.optimize import minimize
+import collections
 
-
-def acq_max(ac, gp, y_max, bounds, random_state, n_warmup=100000, n_iter=250):
+def acq_max(ac, gp, y_max, bounds, random_state, n_warmup=100000, n_iter=250,topn=1):
     """
     A function to find the maximum of the acquisition function
 
@@ -48,7 +48,9 @@ def acq_max(ac, gp, y_max, bounds, random_state, n_warmup=100000, n_iter=250):
     ys = ac(x_tries, gp=gp, y_max=y_max)
     x_max = x_tries[ys.argmax()]
     max_acq = ys.max()
-
+    y2x=dict()
+    for i in range(len(ys)):
+        y2x[ys[i]]=x_tries[i]
     # Explore the parameter space more throughly
     x_seeds = random_state.uniform(bounds[:, 0], bounds[:, 1],
                                    size=(n_iter, bounds.shape[0]))
@@ -62,7 +64,7 @@ def acq_max(ac, gp, y_max, bounds, random_state, n_warmup=100000, n_iter=250):
         # See if success
         if not res.success:
             continue
-           
+        y2x[-res.fun[0]]=res.x
         # Store it if better than previous minimum(maximum).
         if max_acq is None or -res.fun[0] >= max_acq:
             x_max = res.x
@@ -70,8 +72,11 @@ def acq_max(ac, gp, y_max, bounds, random_state, n_warmup=100000, n_iter=250):
 
     # Clip output to make sure it lies within the bounds. Due to floating
     # point technicalities this is not always the case.
-    return np.clip(x_max, bounds[:, 0], bounds[:, 1])
-
+    if topn==1:
+        ret=np.clip(x_max, bounds[:, 0], bounds[:, 1])
+    else:
+        ret=[np.clip(y2x[x],bounds[:, 0], bounds[:, 1]) for x in sorted(y2x.keys(),reverse=True)[:min(topn,len(y2x))] ]
+    return ret
 
 class UtilityFunction(object):
     """
